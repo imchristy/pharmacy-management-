@@ -1,24 +1,278 @@
-# Compiled class file
-*.class
+import java.awt.*;
+import java.awt.event.*;
+import java.util.HashMap;
+import java.util.Map;
 
-# Log file
-*.log
+// User Authentication Module
+class UserAuthentication {
+    private String username = "admin";
+    private String password = "admin123";
 
-# BlueJ files
-*.ctxt
+    public boolean authenticate(String username, String password) {
+        return this.username.equals(username) && this.password.equals(password);
+    }
+}
 
-# Mobile Tools for Java (J2ME)
-.mtj.tmp/
+// Medicine Class for Inventory Management
+class Medicine {
+    private String name;
+    private double price;
+    private int quantity;
 
-# Package Files #
-*.jar
-*.war
-*.nar
-*.ear
-*.zip
-*.tar.gz
-*.rar
+    public Medicine(String name, double price, int quantity) {
+        this.name = name;
+        this.price = price;
+        this.quantity = quantity;
+    }
 
-# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
-hs_err_pid*
-replay_pid*
+    public String getName() {
+        return name;
+    }
+
+    public double getPrice() {
+        return price;
+    }
+
+    public int getQuantity() {
+        return quantity;
+    }
+
+    public void addQuantity(int quantity) {
+        this.quantity += quantity;
+    }
+
+    public void reduceQuantity(int quantity) {
+        this.quantity -= quantity;
+    }
+
+    @Override
+    public String toString() {
+        return "Medicine Name: " + name + ", Price: $" + price + ", Quantity: " + quantity;
+    }
+}
+
+// Inventory Management Module
+class MedicineDatabase {
+    private HashMap<String, Medicine> medicineMap;
+
+    public MedicineDatabase() {
+        medicineMap = new HashMap<>();
+    }
+
+    public boolean verifyMedicine(String name) {
+        return medicineMap.containsKey(name.toLowerCase());
+    }
+
+    public Medicine getMedicine(String name) {
+        return medicineMap.get(name.toLowerCase());
+    }
+
+    public void addMedicine(String name, double price, int quantity) {
+        String normalizedName = name.toLowerCase();
+        if (medicineMap.containsKey(normalizedName)) {
+            medicineMap.get(normalizedName).addQuantity(quantity);
+        } else {
+            medicineMap.put(normalizedName, new Medicine(name, price, quantity));
+        }
+    }
+
+    public Map<String, Medicine> getMedicines() {
+        return medicineMap;
+    }
+}
+
+// Payment Gateway Integration Module
+class PaymentGateway {
+    public boolean processPayment(double amount) {
+        // Simulate payment process
+        return amount > 0;  // Payment succeeds if amount is greater than 0
+    }
+}
+
+// Order Processing Module
+class OrderProcessing {
+    private PaymentGateway paymentGateway;
+
+    public OrderProcessing() {
+        this.paymentGateway = new PaymentGateway();
+    }
+
+    public boolean processOrder(double amount) {
+        return paymentGateway.processPayment(amount);
+    }
+}
+
+// Reporting and Analytics Module
+class Reporting {
+    public String generateReport(MedicineDatabase medicineDatabase) {
+        StringBuilder report = new StringBuilder("Inventory Report:\n");
+        for (Medicine medicine : medicineDatabase.getMedicines().values()) {
+            report.append(medicine.toString()).append("\n");
+        }
+        return report.toString();
+    }
+}
+
+// Main Pharmacy Management System Class
+public class PharmacyManagementSystem extends Frame implements ActionListener {
+    private Label addLabel, sellLabel, inventoryLabel, loginLabel;
+    private TextField addNameField, addPriceField, addQuantityField, sellNameField, sellQuantityField, usernameField, passwordField;
+    private Button addButton, sellButton, displayButton, clearButton, loginButton;
+    private TextArea outputArea;
+    private MedicineDatabase medicineDatabase;
+    private UserAuthentication userAuthentication;
+    private OrderProcessing orderProcessing;
+    private Reporting reporting;
+    private boolean isAuthenticated = false;
+
+    public PharmacyManagementSystem() {
+        // Initialize modules
+        medicineDatabase = new MedicineDatabase();
+        userAuthentication = new UserAuthentication();
+        orderProcessing = new OrderProcessing();
+        reporting = new Reporting();
+
+        // Create GUI components
+        loginLabel = new Label("Username:");
+        usernameField = new TextField(15);
+        passwordField = new TextField(15);
+        passwordField.setEchoChar('*');
+        loginButton = new Button("Login");
+
+        addLabel = new Label("Add Medicine (Name, Price, Quantity):");
+        sellLabel = new Label("Sell Medicine (Name, Quantity):");
+        inventoryLabel = new Label("Pharmacy Inventory:");
+
+        addNameField = new TextField(15);
+        addPriceField = new TextField(10);
+        addQuantityField = new TextField(10);
+        sellNameField = new TextField(15);
+        sellQuantityField = new TextField(10);
+
+        addButton = new Button("Add Medicine");
+        sellButton = new Button("Sell Medicine");
+        displayButton = new Button("Display Inventory");
+        clearButton = new Button("Clear");
+
+        outputArea = new TextArea(15, 50);
+
+        // Set layout
+        setLayout(new FlowLayout());
+
+        // Set background colors
+        setBackground(Color.LIGHT_GRAY);  // Background color for the entire frame
+        addLabel.setBackground(Color.CYAN);
+        sellLabel.setBackground(Color.CYAN);
+        inventoryLabel.setBackground(Color.CYAN);
+        loginLabel.setBackground(Color.CYAN);
+        outputArea.setBackground(Color.WHITE);
+
+        // Add components to Frame
+        add(loginLabel);
+        add(usernameField);
+        add(passwordField);
+        add(loginButton);
+
+        add(addLabel);
+        add(addNameField);
+        add(addPriceField);
+        add(addQuantityField);
+        add(addButton);
+
+        add(sellLabel);
+        add(sellNameField);
+        add(sellQuantityField);
+        add(sellButton);
+
+        add(inventoryLabel);
+        add(displayButton);
+        add(clearButton);
+        add(outputArea);
+
+        // Add action listeners
+        loginButton.addActionListener(this);
+        addButton.addActionListener(this);
+        sellButton.addActionListener(this);
+        displayButton.addActionListener(this);
+        clearButton.addActionListener(this);
+
+        // Frame settings
+        setTitle("Pharmacy Management System");
+        setSize(600, 500);
+        setVisible(true);
+
+        // Close operation
+        addWindowListener(new WindowAdapter() {
+            public void windowClosing(WindowEvent we) {
+                System.exit(0);
+            }
+        });
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        if (e.getSource() == loginButton) {
+            // User authentication
+            String username = usernameField.getText().trim();
+            String password = passwordField.getText().trim();
+            if (userAuthentication.authenticate(username, password)) {
+                isAuthenticated = true;
+                outputArea.setText("Login successful!\n");
+            } else {
+                outputArea.setText("Invalid username or password.\n");
+            }
+        } else if (e.getSource() == addButton && isAuthenticated) {
+            // Add Medicine
+            try {
+                String name = addNameField.getText().trim();
+                double price = Double.parseDouble(addPriceField.getText().trim());
+                int quantity = Integer.parseInt(addQuantityField.getText().trim());
+
+                medicineDatabase.addMedicine(name, price, quantity);
+                outputArea.setText("Medicine added: " + name + "\n");
+            } catch (NumberFormatException ex) {
+                outputArea.setText("Invalid input! Please enter valid price and quantity.\n");
+            }
+        } else if (e.getSource() == sellButton && isAuthenticated) {
+            // Sell Medicine
+            try {
+                String name = sellNameField.getText().trim();
+                int quantity = Integer.parseInt(sellQuantityField.getText().trim());
+
+                if (medicineDatabase.verifyMedicine(name)) {
+                    Medicine medicine = medicineDatabase.getMedicine(name);
+                    if (medicine.getQuantity() >= quantity) {
+                        medicine.reduceQuantity(quantity);
+                        double amount = quantity * medicine.getPrice();
+                        if (orderProcessing.processOrder(amount)) {
+                            outputArea.setText("Sold " + quantity + " units of " + name + ". Total: $" + amount + "\n");
+                        } else {
+                            outputArea.setText("Payment failed for " + name + ".\n");
+                        }
+                    } else {
+                        outputArea.setText("Insufficient stock for " + name + ".\n");
+                    }
+                } else {
+                    outputArea.setText("Medicine not available: " + name + ".\n");
+                }
+            } catch (NumberFormatException ex) {
+                outputArea.setText("Invalid input! Please enter a valid quantity.\n");
+            }
+        } else if (e.getSource() == displayButton && isAuthenticated) {
+            // Display Inventory
+            String report = reporting.generateReport(medicineDatabase);
+            outputArea.setText(report);
+        } else if (e.getSource() == clearButton) {
+            // Clear Fields
+            addNameField.setText("");
+            addPriceField.setText("");
+            sellNameField.setText("");
+            sellQuantityField.setText("");
+            outputArea.setText("");
+        }
+    }
+
+    public static void main(String[] args) {
+        new PharmacyManagementSystem();
+    }
+}
